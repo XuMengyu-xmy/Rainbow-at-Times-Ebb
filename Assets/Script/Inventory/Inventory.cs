@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
+
 public class Inventory : MonoBehaviour
 {
     public static Inventory instance; // 单例模式，方便全局访问
@@ -34,41 +35,41 @@ public class Inventory : MonoBehaviour
     void Start()
     {
         Debug.Log("Inventory Start方法被调用");
-        
+
         // 如果没有设置UI引用，尝试自动创建或查找
         if (inventoryPanel == null)
         {
             Debug.LogWarning("inventoryPanel未设置，尝试自动创建UI");
             CreateInventoryUI();
         }
-        
+
         // 检查必要的引用是否设置
         if (inventoryPanel == null)
         {
             Debug.LogError("inventoryPanel未设置，自动创建失败，请在Inspector中指定背包面板");
         }
-        
+
         if (slotsParent == null)
         {
             Debug.LogError("slotsParent未设置，请在Inspector中指定物品格子的父物体");
         }
-        
+
         if (slotPrefab == null)
         {
             Debug.LogError("slotPrefab未设置，请在Inspector中指定物品格子预制体");
         }
-        
+
         // 根据容量创建足够多的格子
         for (int i = 0; i < space; i++)
         {
             Instantiate(slotPrefab, slotsParent);
         }
-        
+
         Debug.Log("创建了 " + space + " 个物品格子");
-        
+
         // 订阅UI更新事件
         onItemChangedCallback += UpdateUIOptimized;
-        
+
         // 确保背包面板初始状态为隐藏
         if (inventoryPanel != null)
         {
@@ -76,7 +77,7 @@ public class Inventory : MonoBehaviour
             Debug.Log("背包面板初始状态设置为隐藏");
         }
     }
-    
+
     // 自动创建背包UI
     void CreateInventoryUI()
     {
@@ -91,26 +92,26 @@ public class Inventory : MonoBehaviour
             canvasObj.AddComponent<GraphicRaycaster>();
             Debug.Log("创建了新的Canvas");
         }
-        
+
         // 创建背包面板
         inventoryPanel = new GameObject("InventoryPanel");
         inventoryPanel.transform.SetParent(canvas.transform, false);
-        
+
         // 添加Image组件作为背景
         Image panelImage = inventoryPanel.AddComponent<Image>();
         panelImage.color = new Color(0.1f, 0.1f, 0.1f, 0.8f); // 半透明黑色背景
-        
+
         // 设置RectTransform
         RectTransform panelRect = inventoryPanel.GetComponent<RectTransform>();
         panelRect.anchorMin = new Vector2(0.3f, 0.3f);
         panelRect.anchorMax = new Vector2(0.7f, 0.7f);
         panelRect.offsetMin = Vector2.zero;
         panelRect.offsetMax = Vector2.zero;
-        
+
         // 创建物品格子容器
         GameObject slotsContainer = new GameObject("SlotsContainer");
         slotsContainer.transform.SetParent(inventoryPanel.transform, false);
-        
+
         // 添加GridLayoutGroup组件
         GridLayoutGroup gridLayout = slotsContainer.AddComponent<GridLayoutGroup>();
         gridLayout.cellSize = new Vector2(60, 60);
@@ -119,39 +120,39 @@ public class Inventory : MonoBehaviour
         gridLayout.startAxis = GridLayoutGroup.Axis.Horizontal;
         gridLayout.startCorner = GridLayoutGroup.Corner.UpperLeft;
         gridLayout.childAlignment = TextAnchor.UpperLeft;
-        
+
         // 设置RectTransform
         RectTransform containerRect = slotsContainer.GetComponent<RectTransform>();
         containerRect.anchorMin = Vector2.zero;
         containerRect.anchorMax = Vector2.one;
         containerRect.offsetMin = new Vector2(10, 10);
         containerRect.offsetMax = new Vector2(-10, -10);
-        
+
         slotsParent = slotsContainer.transform;
-        
+
         // 如果没有设置格子预制体，创建一个基本的
         if (slotPrefab == null)
         {
             CreateSlotPrefab();
         }
-        
+
         Debug.Log("自动创建了背包UI结构");
     }
-    
+
     // 创建物品格子预制体
     void CreateSlotPrefab()
     {
         // 创建格子预制体
         slotPrefab = new GameObject("Slot");
-        
+
         // 添加Image组件作为背景
         Image slotImage = slotPrefab.AddComponent<Image>();
         slotImage.color = new Color(0.2f, 0.2f, 0.2f, 0.8f); // 深灰色背景
-        
+
         // 设置RectTransform
         RectTransform slotRect = slotPrefab.GetComponent<RectTransform>();
         slotRect.sizeDelta = new Vector2(60, 60);
-        
+
         // 创建物品图标Image
         GameObject iconObj = new GameObject("Icon");
         iconObj.transform.SetParent(slotPrefab.transform, false);
@@ -162,7 +163,7 @@ public class Inventory : MonoBehaviour
         iconRect.offsetMin = Vector2.zero;
         iconRect.offsetMax = Vector2.zero;
         iconImage.enabled = false; // 初始隐藏
-        
+
         // 创建数量文本
         GameObject amountObj = new GameObject("AmountText");
         amountObj.transform.SetParent(slotPrefab.transform, false);
@@ -177,7 +178,7 @@ public class Inventory : MonoBehaviour
         amountRect.offsetMin = new Vector2(0, 0);
         amountRect.offsetMax = new Vector2(0, 0);
         amountText.enabled = false; // 初始隐藏
-        
+
         // 创建移除按钮
         GameObject removeObj = new GameObject("RemoveButton");
         removeObj.transform.SetParent(slotPrefab.transform, false);
@@ -190,21 +191,21 @@ public class Inventory : MonoBehaviour
         removeRect.anchorMax = new Vector2(1, 1);
         removeRect.anchoredPosition = new Vector2(-5, -5);
         removeButton.interactable = false; // 初始不可交互
-        
+
         // 添加InventorySlot组件并设置引用
         InventorySlot slot = slotPrefab.AddComponent<InventorySlot>();
         slot.icon = iconImage;
         slot.amountText = amountText;
         slot.removeButton = removeButton;
-        
+
         Debug.Log("创建了物品格子预制体");
     }
-    
+
     // 更新所有UI格子（优化版本）
     void UpdateUI()
     {
         Debug.Log($"更新背包UI，物品数量: {items.Count}");
-        
+
         // 获取所有格子
         InventorySlot[] slots = slotsParent.GetComponentsInChildren<InventorySlot>();
 
@@ -229,7 +230,7 @@ public class Inventory : MonoBehaviour
             }
         }
     }
-    
+
     // 优化的UI更新方法，只更新变化的格子
     void UpdateUIOptimized()
     {
@@ -305,7 +306,7 @@ public class Inventory : MonoBehaviour
                 }
             }
         }
-        
+
         // 如果还有剩余物品需要添加，检查背包空间
         while (amount > 0)
         {
@@ -315,20 +316,20 @@ public class Inventory : MonoBehaviour
                 Debug.Log("背包已满!");
                 return false;
             }
-            
+
             // 创建新的堆叠
             int stackAmount = Mathf.Min(amount, itemToAdd.maxStackSize);
             items.Add(new ItemStack(itemToAdd, stackAmount));
             amount -= stackAmount;
         }
-        
+
         // 通知UI更新
         if (onItemChangedCallback != null)
         {
             onItemChangedCallback.Invoke();
             Debug.Log($"成功添加物品: {itemToAdd.itemName}, 数量: {amount}, 当前背包物品数量: {items.Count}");
         }
-        
+
         return true;
     }
 
@@ -344,7 +345,7 @@ public class Inventory : MonoBehaviour
                 {
                     amount -= stack.amount;
                     items.RemoveAt(i);
-                    
+
                     if (amount == 0) break;
                 }
                 else
@@ -354,19 +355,19 @@ public class Inventory : MonoBehaviour
                 }
             }
         }
-        
+
         // 通知UI更新
         if (onItemChangedCallback != null)
         {
             onItemChangedCallback.Invoke();
         }
     }
-    
+
     // 从背包移除整个堆叠
     public void RemoveStack(ItemStack stackToRemove)
     {
         items.Remove(stackToRemove);
-        
+
         // 通知UI更新
         if (onItemChangedCallback != null)
         {
