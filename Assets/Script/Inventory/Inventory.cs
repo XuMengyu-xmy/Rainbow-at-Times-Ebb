@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 
 
+
 public class Inventory : MonoBehaviour
 {
     public static Inventory instance; // 单例模式，方便全局访问
